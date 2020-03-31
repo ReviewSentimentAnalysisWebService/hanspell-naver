@@ -1,6 +1,8 @@
 import requests
 import json
 import re
+from requests.exceptions import HTTPError
+import time
 
 
 class HanspellChecker:
@@ -44,9 +46,25 @@ class HanspellChecker:
         }
 
         # Get response
-        r = self._agent.get(self.base_url, params=payload, headers = self.headers)
+        success = False
+        try_cnt = 0
+        while success == False:
+            try:
+                r = self._agent.get(self.base_url, params=payload, headers = self.headers)
+                try_cnt += 1
+                res_code = r.status_code
+                if res_code != 200:  # response 200 means 'The request has succeeded'
+                    if try_cnt >= 3:
+                        return text
+                    raise HTTPError
+            except HTTPError:
+                print("[!] An error occurred while sending the request. error code: {}".format(res_code))
+                print("[-] Waiting 5 seconds before resending the request...")
+                time.sleep(5)
+            else:
+                success = True
+                
         r = r.text[len(payload['_callback'])+1:-2]
-
         data = json.loads(r)
         html = data['message']['result']['html']
 
