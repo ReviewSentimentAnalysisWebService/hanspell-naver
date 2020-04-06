@@ -1,20 +1,15 @@
 import requests
 import json
 import re
-from requests.exceptions import HTTPError
 import time
+from requests.exceptions import HTTPError
 
 
 class HanspellChecker:
 
     def __init__(self):
          # we'll use Naver spell checker
-        self.base_url = 'https://m.search.naver.com/p/csearch/ocontent/spellchecker.nhn'
-        self.headers = {
-            'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-            'referer': 'https://search.naver.com/'
-        }
-
+        self.base_url = 'https://m.search.naver.com/p/csearch/ocontent/util/SpellerProxy'
         self._agent = requests.Session()
 
 
@@ -40,9 +35,9 @@ class HanspellChecker:
         if len(text) > 500:
             return text
         
-        payload = {
-            '_callback': 'window.__jindo2_callback._spellingCheck_0',
-            'q': text
+        params = {
+            'q': text,
+            'color_blindness': 0
         }
 
         # Get response
@@ -50,7 +45,7 @@ class HanspellChecker:
         try_cnt = 0
         while success == False:
             try:
-                r = self._agent.get(self.base_url, params=payload, headers = self.headers)
+                r = self._agent.get(self.base_url, params=params)
                 try_cnt += 1
                 res_code = r.status_code
                 if res_code != 200:  # response 200 means 'The request has succeeded'
@@ -64,11 +59,11 @@ class HanspellChecker:
             else:
                 success = True
                 
-        r = r.text[len(payload['_callback'])+1:-2]
+        r = r.text  # change bytestring to string
         data = json.loads(r)
         html = data['message']['result']['html']
 
-        # Remove <span> tag in the response
+        # Remove html tag in the response
         result = self.remove_tag(html)
         
         return result
@@ -77,5 +72,4 @@ class HanspellChecker:
 if __name__ == '__main__':
     
     checker = HanspellChecker()
-
-    print(checker.correct("안녕하세여. 자연어처리는 넘 어려워용"))
+    print(checker.correct("안녕하세여. 자연어처리는 넘 어려워용."))
