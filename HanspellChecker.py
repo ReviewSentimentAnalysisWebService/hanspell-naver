@@ -1,5 +1,5 @@
 import requests
-from pathlib import Path
+import os
 import json
 import re
 import time
@@ -26,7 +26,6 @@ class HanspellChecker:
             u"\U0001F680-\U0001F6FF"  # transport & map symbols
             u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
             u"\U00002500-\U00002BEF"  # chinese char
-            u"\U00002702-\U000027B0"
             u"\U00002702-\U000027B0"
             u"\U0001f926-\U0001f937"
             u"\U00010000-\U0010ffff"
@@ -108,7 +107,7 @@ class HanspellChecker:
         
         corrected = self.correct(text_list)
 
-        new_filename = Path(filename).resolve().stem + "_corrected.txt"
+        new_filename = os.path.splitext(os.path.basename(filename))[0] + "_corrected.txt"
         with open(new_filename, "w", encoding="utf-8") as f:
             f.write("\n".join(corrected))
 
